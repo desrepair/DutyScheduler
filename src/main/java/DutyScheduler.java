@@ -125,6 +125,7 @@ public class DutyScheduler {
         }
 
         // spark test
+        externalStaticFileLocation("static");
         get("/hello", (req, res) -> "Hello Universe");
 
         System.out.println("hello!!");
