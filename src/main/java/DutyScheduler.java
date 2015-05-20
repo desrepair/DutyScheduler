@@ -20,6 +20,8 @@ import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
 
+import static spark.Spark.*;
+
 public class DutyScheduler {
     /** Application name. */
     private static final String APPLICATION_NAME =
@@ -121,6 +123,11 @@ public class DutyScheduler {
                 System.out.printf("%s (%s)\n", event.getSummary(), start);
             }
         }
+
+        // spark test
+        get("/hello", (req, res) -> "Hello Universe");
+
+        System.out.println("hello!!");
     }
 
 }
