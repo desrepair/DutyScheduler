@@ -3,26 +3,26 @@ package SchedulingHeuristic;
 import java.time.LocalDate;
 
 /**
- * Represents a day of duty.
+ * Represents a block of duty.
  * @author desrepair
  */
-public class DutyDay {
-    private LocalDate date;
+public class DutyBlock {
+    private LocalDate startDate;
     private int pointValue;
     private Ra assigned;
     
     /**
-     * Creates a DutyDay object representing the specified date.
+     * Creates a DutyBlock object representing the specified startDate.
      * @param d Date of the duty day.
      */
-    public DutyDay(LocalDate d) {
-        date = d;
-        pointValue = 1;
+    public DutyBlock(LocalDate d) {
+        startDate = d;
+        pointValue = 0;
         assigned = null;
     }
     
     /**
-     * Sets the RA on duty for the duty day.
+     * Sets the RA on duty for the duty block.
      * @param onDuty RA on duty.
      */
     public void assignRa(Ra onDuty) {
@@ -30,7 +30,7 @@ public class DutyDay {
     }
     
     /**
-     * Sets the point value of the duty day.
+     * Sets the point value of the duty block.
      * @param value Point value to set to.
      */
     public void setPointValue(int value) {
@@ -38,15 +38,23 @@ public class DutyDay {
     }
     
     /**
-     * Returns the date of the duty day.
-     * @return Date of the duty day.
+     * Increases the point value of the duty block.
+     * @param value  Value to increase by.
      */
-    public LocalDate getDate() {
-        return date;
+    public void addPointValue(int value) {
+        pointValue += value;
     }
     
     /**
-     * Returns the point value of the duty day.
+     * Returns the start date of the duty block.
+     * @return Date of the duty day.
+     */
+    public LocalDate getDate() {
+        return startDate;
+    }
+    
+    /**
+     * Returns the point value of the duty block.
      * @return Point value of the duty day.
      */
     public int getPointValue() {
@@ -54,7 +62,7 @@ public class DutyDay {
     }
     
     /**
-     * Returns the RA assigned to duty on this duty day.
+     * Returns the RA assigned to duty on this duty block.
      * @return RA assigned on duty.
      */
     public Ra getRaOnDuty() {
