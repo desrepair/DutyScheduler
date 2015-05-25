@@ -1,0 +1,29 @@
+{
+  "name": "DutyScheduler",
+  "version": "1.0.0",
+  "description": "Frontend generator for DutyScheduler",
+  "main": "index.js",
+  "dependencies": {
+    "grunt-cli": "^0.1.13",
+    "react-tools": "^0.13.3"
+  },
+  "devDependencies": {
+    "browserify": "^6.3.3",
+    "envify": "^3.2.0",
+    "react": "^0.13.0",
+    "reactify": "^0.17.1"
+  },
+  "scripts": {
+    "build": "browserify --debug --transform reactify index.js > bundle.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/desrepair/DutyScheduler.git"
+  },
+  "author": "Yujin Ariza",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/desrepair/DutyScheduler/issues"
+  },
+  "homepage": "https://github.com/desrepair/DutyScheduler"
+}
