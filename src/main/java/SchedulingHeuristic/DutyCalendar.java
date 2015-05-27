@@ -12,8 +12,9 @@ public class DutyCalendar {
     private ArrayList<Ra> raList;
     private ArrayList<DutyBlock> dutyCalendar;
     private int blockSize;
-            
-    public static LocalDate currentDay;
+
+    public static DutyBlock currentBlock;
+    public static int numberOfRAs;
     
     /**
      * Constructor
@@ -24,13 +25,14 @@ public class DutyCalendar {
         raList = new ArrayList<Ra>();
         dutyCalendar = new ArrayList<DutyBlock>();
         blockSize = bSize;
-        currentDay = start;
+        numberOfRAs = 0;
         
         //Populate days.
         while (!start.isAfter(end)) {
-            dutyCalendar.add(new DutyBlock(start));
+            dutyCalendar.add(new DutyBlock(start, blockSize));
             start = start.plusDays(bSize);
         }
+        currentBlock = dutyCalendar.get(0);
     }
     
     /**
@@ -40,19 +42,19 @@ public class DutyCalendar {
      */
     public void addRa(String name, ArrayList<LocalDate> blackoutDates) {
         raList.add(new Ra(name, blackoutDates));
+        numberOfRAs++;
     }
     
     /**
      * Sets the point value of each duty day.
      * @param map Day-Value mapping.
      */
-    public void setDayValues(HashMap<LocalDate, Integer> map) {
+    public void setDayValues(HashMap<LocalDate, Double> map) {
         for (LocalDate key : map.keySet()) {
-            DutyBlock temp = getDutyDate(key);
-            if (temp == null) {
-                return;
+            DutyBlock temp = getDutyBlock(key);
+            if (temp != null) {
+                temp.addPointValue(map.get(key));
             }
-            temp.setPointValue(map.get(key));
         }
     }
     
@@ -61,16 +63,15 @@ public class DutyCalendar {
      * @param toGet Date of the duty day to get.
      * @return DutyBlock object corresponding to the specified date in the duty calendar.
      */
-    private DutyBlock getDutyDate(LocalDate toGet) {
+    private DutyBlock getDutyBlock(LocalDate toGet) {
         DutyBlock closestBlock = dutyCalendar.get(0);
-        for (DutyBlock day : dutyCalendar) {
-            if (day.getDate().isAfter(toGet)) {
-                return closestBlock;
+        for (DutyBlock block : dutyCalendar) {
+            if (block.getStartDate().equals(toGet)) {
+                return block;
             }
-            if (day.getDate().equals(toGet)) {
-                return day;
+            if (toGet.isAfter(block.getStartDate()) && toGet.isBefore(block.getEndDate().plusDays(1))) {
+                return block;
             }
-            closestBlock = day;
         }
         return null;
     }
@@ -79,20 +80,19 @@ public class DutyCalendar {
      * Given the set of RAs and duty days, assign RAs to duty days.
      */
     public void assignDuty() {
-        for (DutyBlock day : dutyCalendar) {
-            currentDay = day.getDate();
+        for (DutyBlock block : dutyCalendar) {
+            currentBlock = block;
             double min = Double.MAX_VALUE;
             Ra toAssign = null;
             for (Ra ra : raList) {
-                double value = ra.calculateDayWorth(currentDay);
+                double value = ra.calculateDayWorth(block);
                 if (value < min) {
                     min = value;
                     toAssign = ra;
                 }
             }
-            toAssign.assignDay(day.getDate(), day.getPointValue());
-            day.assignRa(toAssign);
-            
+            toAssign.assignDay(block.getStartDate(), block.getPointValue());
+            block.assignRa(toAssign);
         }
     }
     
@@ -100,7 +100,7 @@ public class DutyCalendar {
     public String toString() {
         StringBuilder result = new StringBuilder();
         for (DutyBlock day : dutyCalendar) {
-            result.append(day.getDate());
+            result.append(day.getStartDate());
             result.append(": ");
             result.append(day.getRaOnDuty());
             result.append("\n");
