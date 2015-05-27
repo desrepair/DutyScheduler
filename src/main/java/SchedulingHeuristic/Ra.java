@@ -9,9 +9,9 @@ import java.time.temporal.ChronoUnit;
  * @author desrepair
  */
 public class Ra implements Comparable<Ra> {
-    private String name;
+    private final String name;
     private double pointsTaken;
-    private LocalDate lastDutyDay;
+    private LocalDate previousDutyDay;
     private ArrayList<LocalDate> blackoutDates;
     private ArrayList<LocalDate> dutyDays;
 
@@ -24,7 +24,7 @@ public class Ra implements Comparable<Ra> {
         name = n;
         pointsTaken = 0;
         blackoutDates = b;
-        lastDutyDay = DutyCalendar.currentDay;
+        previousDutyDay = DutyCalendar.currentBlock.getStartDate();
         dutyDays = new ArrayList<>();
     }
     
@@ -33,10 +33,11 @@ public class Ra implements Comparable<Ra> {
      * @return Days since RA last on duty.
      */
     private int daysSinceLastDuty() {
-        if (lastDutyDay == null) {
-            return 14;
+        if (previousDutyDay == null) {
+            return DutyCalendar.numberOfRAs;
         }
-        return (int) lastDutyDay.until(DutyCalendar.currentDay, ChronoUnit.DAYS);
+        return (int) previousDutyDay.until(DutyCalendar.currentBlock.getStartDate(),
+                ChronoUnit.DAYS);
     }
     
     /**
@@ -44,8 +45,8 @@ public class Ra implements Comparable<Ra> {
      * @param day A day the RA is on duty.
      * @param points Point value of the day of duty.
      */
-    public void assignDay(LocalDate day, int points) {
-        lastDutyDay = day;
+    public void assignDay(LocalDate day, double points) {
+        previousDutyDay = day;
         dutyDays.add(day);
         pointsTaken += points;
     }
@@ -69,21 +70,26 @@ public class Ra implements Comparable<Ra> {
     /**
      * Calculates the RA's priority for a certain duty day.
      * Lower value indicates higher priority.
-     * @param d Date to determine RA's priority for.
+     * @param b Block to determine RA's priority for.
      * @return RA's priority for the duty day.
      */
-    public double calculateDayWorth(LocalDate d) {
-        if (blackoutDates.contains(d)) {
-            return Double.POSITIVE_INFINITY;
+    public double calculateDayWorth(DutyBlock b) {
+        for (LocalDate blackoutDate : blackoutDates) {
+            if (blackoutDate.isEqual(b.getStartDate())
+                    || (blackoutDate.isAfter(b.getStartDate()) 
+                        && blackoutDate.isBefore(b.getEndDate().plusDays(1)))) {
+                return Double.MAX_VALUE;
+            }
         }
         
-        return pointsTaken + 0.01 * (14 - daysSinceLastDuty());
+        return pointsTaken + 0.01 * (DutyCalendar.numberOfRAs
+                - daysSinceLastDuty());
     }
 
     @Override
     public int compareTo(Ra o) {
-        return (int) (calculateDayWorth(DutyCalendar.currentDay)
-                - o.calculateDayWorth(DutyCalendar.currentDay));
+        return (int) (calculateDayWorth(DutyCalendar.currentBlock)
+                - o.calculateDayWorth(DutyCalendar.currentBlock));
     }
     
     @Override

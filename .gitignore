@@ -18,6 +18,8 @@ gradle-app.setting
 
 # Avoid ignoring Gradle wrapper file (.jar files are usually ignored)
 !gradle-wrapper.jar
+#Netbeans added this.
+/.nb-gradle/
 
 # Client Secret
 client_secret.json
