@@ -1,6 +1,7 @@
 package SchedulingHeuristic;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 
 /**
  * Represents a block of duty.
@@ -11,18 +12,19 @@ public class DutyBlock {
     private LocalDate endDate; //Inclusive
     private int blockLength;
     private double pointValue;
-    private Ra assigned;
+    private ArrayList<Ra> assigned;
     
     /**
      * Creates a DutyBlock object representing the specified startDate.
      * @param d Date of the duty day.
+     * @param length The length of the duty block in days.
      */
     public DutyBlock(LocalDate d, int length) {
         startDate = d;
         blockLength = length;
-        endDate = startDate.plusDays(length);
+        endDate = startDate.plusDays(length-1);
         pointValue = 0;
-        assigned = null;
+        assigned = new ArrayList<>();
     }
     
     /**
@@ -30,7 +32,7 @@ public class DutyBlock {
      * @param onDuty RA on duty.
      */
     public void assignRa(Ra onDuty) {
-        assigned = onDuty;
+        assigned.add(onDuty);
     }
     
     /**
@@ -75,9 +77,9 @@ public class DutyBlock {
     
     /**
      * Returns the RA assigned to duty on this duty block.
-     * @return RA assigned on duty.
+     * @return List of RAs assigned on duty.
      */
-    public Ra getRaOnDuty() {
+    public ArrayList<Ra> getRasOnDuty() {
         return assigned;
     }
 }

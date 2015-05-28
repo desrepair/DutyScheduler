@@ -68,6 +68,14 @@ public class Ra implements Comparable<Ra> {
     }
     
     /**
+     * Returns the point value of duty assigned to the RA.
+     * @return Point value of duty assigned to the RA in double form.
+     */
+    public double getPointsTaken() {
+        return pointsTaken;
+    }
+    
+    /**
      * Calculates the RA's priority for a certain duty day.
      * Lower value indicates higher priority.
      * @param b Block to determine RA's priority for.
@@ -81,8 +89,8 @@ public class Ra implements Comparable<Ra> {
                 return Double.MAX_VALUE;
             }
         }
-        
-        return pointsTaken + 0.01 * (DutyCalendar.numberOfRAs
+        //Implementation is a minHeap - more days since last duty means more desirable.
+        return pointsTaken + .01 * (DutyCalendar.numberOfRAs
                 - daysSinceLastDuty());
     }
 

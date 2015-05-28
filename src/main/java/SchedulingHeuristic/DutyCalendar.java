@@ -12,6 +12,7 @@ public class DutyCalendar {
     private ArrayList<Ra> raList;
     private ArrayList<DutyBlock> dutyCalendar;
     private int blockSize;
+    private int rasPerBlock;
 
     public static DutyBlock currentBlock;
     public static int numberOfRAs;
@@ -20,12 +21,15 @@ public class DutyCalendar {
      * Constructor
      * @param start Start date of the duty calendar, inclusive.
      * @param end End date of the duty calendar, inclusive.
+     * @param bSize Length of duty blocks in days.
+     * @param rNum Number of RAs to assign to a duty block.
      */
-    public DutyCalendar(LocalDate start, LocalDate end, int bSize) {
-        raList = new ArrayList<Ra>();
-        dutyCalendar = new ArrayList<DutyBlock>();
+    public DutyCalendar(LocalDate start, LocalDate end, int bSize, int rNum) {
+        raList = new ArrayList<>();
+        dutyCalendar = new ArrayList<>();
         blockSize = bSize;
         numberOfRAs = 0;
+        rasPerBlock = rNum;
         
         //Populate days.
         while (!start.isAfter(end)) {
@@ -82,18 +86,38 @@ public class DutyCalendar {
     public void assignDuty() {
         for (DutyBlock block : dutyCalendar) {
             currentBlock = block;
-            double min = Double.MAX_VALUE;
-            Ra toAssign = null;
-            for (Ra ra : raList) {
-                double value = ra.calculateDayWorth(block);
-                if (value < min) {
-                    min = value;
-                    toAssign = ra;
+            ArrayList<Ra> assignedToday = new ArrayList<>();
+            for (int numAssigned = 0; numAssigned < rasPerBlock; numAssigned++) {
+                double min = Double.MAX_VALUE;
+                Ra toAssign = null;
+                for (Ra ra : raList) {
+                    double value = ra.calculateDayWorth(block);
+                    if (value < min && !assignedToday.contains(ra)) {
+                        min = value;
+                        toAssign = ra;
+                    }
                 }
+                toAssign.assignDay(block.getStartDate(), block.getPointValue());
+                block.assignRa(toAssign);
+                assignedToday.add(toAssign);
+                
             }
-            toAssign.assignDay(block.getStartDate(), block.getPointValue());
-            block.assignRa(toAssign);
         }
+    }
+    
+    /**
+     * Returns a String representation of RAs and the points assigned to them.
+     * @return 
+     */
+    public String printRaPointValues() {
+        StringBuilder result = new StringBuilder();
+        for (Ra ra : raList) {
+            result.append(ra);
+            result.append(": ");
+            result.append(String.valueOf(ra.getPointsTaken()));
+            result.append("\n");
+        }
+        return result.toString();
     }
     
     @Override
@@ -102,7 +126,10 @@ public class DutyCalendar {
         for (DutyBlock day : dutyCalendar) {
             result.append(day.getStartDate());
             result.append(": ");
-            result.append(day.getRaOnDuty());
+            for (Ra ra : day.getRasOnDuty()) {
+                result.append(ra);
+                result.append("; ");
+            }
             result.append("\n");
         }
         return result.toString();
