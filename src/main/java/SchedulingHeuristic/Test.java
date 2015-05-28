@@ -32,6 +32,6 @@ public class Test {
         System.out.println(cal);
         System.out.println(cal.printRaPointValues());
         
-        GoogleCalendarApiAccess.populateExistingDutyCalendar("fip7sipjq607vaqsbn3al0bju8@group.calendar.google.com", result);
+        GoogleCalendarApiAccess.createNewDutyCalendar("Test", result);
     }
 }
