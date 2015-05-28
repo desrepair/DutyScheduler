@@ -83,7 +83,7 @@ public class DutyCalendar {
     /**
      * Given the set of RAs and duty days, assign RAs to duty days.
      */
-    public void assignDuty() {
+    public ArrayList<DutyBlock> assignDuty() {
         for (DutyBlock block : dutyCalendar) {
             currentBlock = block;
             ArrayList<Ra> assignedToday = new ArrayList<>();
@@ -100,9 +100,9 @@ public class DutyCalendar {
                 toAssign.assignDay(block.getStartDate(), block.getPointValue());
                 block.assignRa(toAssign);
                 assignedToday.add(toAssign);
-                
             }
         }
+        return dutyCalendar;
     }
     
     /**

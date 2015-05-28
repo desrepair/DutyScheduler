@@ -25,11 +25,13 @@ public class Test {
         micksBlackout.add(LocalDate.of(2015, 05, 20));
         micksBlackout.add(LocalDate.of(2015, 05, 21));
         cal.addRa("Mick", micksBlackout);
-        cal.addRa("Wenlan's Chosen", new ArrayList<>());
-        cal.addRa("Yujin's Mom", new ArrayList<>());
-        cal.addRa("Jatao", new ArrayList<>());
-        cal.assignDuty();
+        cal.addRa("Tatev", new ArrayList<>());
+        cal.addRa("David", new ArrayList<>());
+        cal.addRa("Cliff", new ArrayList<>());
+        ArrayList<DutyBlock> result = cal.assignDuty();
         System.out.println(cal);
         System.out.println(cal.printRaPointValues());
+        
+        GoogleCalendarApiAccess.populateExistingDutyCalendar("fip7sipjq607vaqsbn3al0bju8@group.calendar.google.com", result);
     }
 }
