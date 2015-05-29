@@ -171,10 +171,10 @@ public class GoogleCalendarApiAccess {
         target.setLocation("");
 
         target.setAttendees(new ArrayList<>());
-        DateTime start = new DateTime(startDate, TimeZone.getTimeZone("America/New_York"));
-        DateTime end = new DateTime(endDate, TimeZone.getTimeZone("America/New_York"));
-        target.setStart(new EventDateTime().setDateTime(start));
-        target.setEnd(new EventDateTime().setDateTime(end));
+        com.google.api.client.util.DateTime start = new DateTime(true, startDate.getTime(), TimeZone.getTimeZone("America/New_York").getRawOffset());
+        com.google.api.client.util.DateTime end = new DateTime(true, endDate.getTime(), TimeZone.getTimeZone("America/New_York").getRawOffset()); 
+        target.setStart(new EventDateTime().setDate(start));
+        target.setEnd(new EventDateTime().setDate(end));
         com.google.api.services.calendar.model.Event createdEvent
                 = service.events().insert(calId, target).execute();
         System.out.println("Event created: " + createdEvent.getHtmlLink());
