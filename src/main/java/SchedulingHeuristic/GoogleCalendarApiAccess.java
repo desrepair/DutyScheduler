@@ -6,10 +6,9 @@
 package SchedulingHeuristic;
 
 import com.google.api.client.auth.oauth2.Credential;
-import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
-import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
+import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
@@ -39,7 +38,10 @@ import java.util.TimeZone;
 public class GoogleCalendarApiAccess {
         /** Application name. */
     private static final String APPLICATION_NAME =
-        "Duty Scheduler";
+        "DutyScheduler";
+    
+    private static final String REDIRECT_URI =
+            "urn:ietf:wg:oauth:2.0:oob";
 
     /** Directory to store user credentials. */
     private static final java.io.File DATA_STORE_DIR = new java.io.File(
@@ -55,54 +57,136 @@ public class GoogleCalendarApiAccess {
     /** Global instance of the HTTP transport. */
     private static HttpTransport HTTP_TRANSPORT;
 
-    /** Global instance of the scopes required by this quickstart. */
+    /** Global instance of the scopes required by this application. */
     private static final List<String> SCOPES =
         Arrays.asList(CalendarScopes.CALENDAR);
+    
+    /** Global instance of the Authorization flow */
+    private static GoogleAuthorizationCodeFlow flow;
 
     static {
         try {
             HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
             DATA_STORE_FACTORY = new FileDataStoreFactory(DATA_STORE_DIR);
+            
+            // Load client secrets and create flow.
+            InputStream in =
+                GoogleCalendarApiAccess.class.getResourceAsStream("../client_secret.json");
+            GoogleClientSecrets clientSecrets =
+                GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
+            flow = new GoogleAuthorizationCodeFlow.Builder(
+                    HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, SCOPES)
+                    .setDataStoreFactory(DATA_STORE_FACTORY)
+                    .setAccessType("offline")
+                    .build();
         } catch (Throwable t) {
             t.printStackTrace();
             System.exit(1);
         }
     }
-
+    
     /**
-     * Creates an authorized Credential object.
-     * @return an authorized Credential object.
-     * @throws IOException
+     * Checks whether a credential is stored associated with the user ID.
+     * @param userId ID of the user.
+     * @return Associated credential, or null if nothing is associated with the ID.
+     * @throws IOException 
      */
-    private static Credential authorize() throws IOException {
-        // Load client secrets.
-        InputStream in =
-            GoogleCalendarApiAccess.class.getResourceAsStream("../client_secret.json");
-        GoogleClientSecrets clientSecrets =
-            GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
-
-        // Build flow and trigger user authorization request.
-        GoogleAuthorizationCodeFlow flow =
-                new GoogleAuthorizationCodeFlow.Builder(
-                        HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, SCOPES)
-                .setDataStoreFactory(DATA_STORE_FACTORY)
-                .setAccessType("offline")
-                .build();
-        Credential credential = new AuthorizationCodeInstalledApp(
-            flow, new LocalServerReceiver()).authorize("user");
+    public static Credential getStoredCredential(String userId) throws IOException {
+        //Check if user credentials already stored.
+        return flow.loadCredential(userId);
+    }
+    
+    /**
+     * Creates a redirect URL for the user to authorize access at.
+     * @return URL to redirect the user's browser to for authentication.
+     * @throws IOException 
+     */
+    public static String requestAuthorizationCode() throws IOException {
+        //Create a url where the user goes to give authorization.
+        String url =  flow.newAuthorizationUrl().setRedirectUri(REDIRECT_URI).build(); //TODO: URI
+        System.out.println("URL: " + url);
+        return url;
+    }
+    
+    /**
+     * Creates an authorized Credential object given a code from Google servers.
+     * @param code Code received from Google servers for token request.
+     * @param userId Id of the user (specific to calendar).
+     * @return Credential created
+     * @throws IOException 
+     */
+    public static Credential getTokenCredential(String code, String userId) throws IOException {
+        //Once we redirect the user to the login/consent page, wait for the authorization code and send a token request.
+        GoogleTokenResponse res = flow.newTokenRequest(code).setRedirectUri(REDIRECT_URI).execute(); //TODO: URI
+        Credential credential = flow.createAndStoreCredential(res, userId);
+        System.out.println("Credential created: " + credential.getAccessToken());
         System.out.println(
                 "Credentials saved to " + DATA_STORE_DIR.getAbsolutePath());
         return credential;
     }
+    
+    /**
+     * Creates a new Calendar and populates it with duty events.
+     * @param calName Name of the calendar to create.
+     * @param userId Id of the user (specific to calendar).
+     * @param dutyCal List of DutyBlock objects to populate the calendar with.
+     * @return 0 if successful, -2 if an error occurs, -3 if unauthorized (redirect).
+     */
+    public static int createNewDutyCalendar(String calName, String userId, ArrayList<DutyBlock> dutyCal) {
+        try {
+            com.google.api.services.calendar.Calendar service = getCalendarService(userId);
+            if (service == null) {
+                return -3;
+            }
+            com.google.api.services.calendar.model.Calendar createdCal = createNewCalendar(service, calName);
+            populateCalendar(service, createdCal.getId(), dutyCal);
+            return 0;
+        } catch (IOException e) {
+            System.out.println("An error occured while connecting to Google");
+            System.out.println(e);
+            return -2;
+        }
+    }
+    
+    /**
+     * Retrieves an existing Calendar and populates it with duty events.
+     * @param calId Id of the calendar to populate.
+     * @param userId Id of the user (specific to calendar).
+     * @param dutyCal List of DutyBlock objects to populate the calendar with.
+     * @return 0 if successful, -1 if retrieval failed, -2 if population failed.
+     */
+    public static int populateExistingDutyCalendar(String calId, String userId, ArrayList<DutyBlock> dutyCal) {
+        try {
+            com.google.api.services.calendar.Calendar service = getCalendarService(userId);
+            if (service == null) {
+                return -3;
+            }
+            com.google.api.services.calendar.model.Calendar retrievedCal = getCalendar(service, calId);
+            if (retrievedCal != null) {
+                populateCalendar(service, retrievedCal.getId(), dutyCal);
+                return 0;
+            } else {
+                return -1;
+            }
+        } catch (IOException e) {
+            System.out.println("An error occured while connecting to Google");
+            System.out.println(e);
+            return -2;
+        }
+    }
 
     /**
      * Build and return an authorized Calendar client service.
+     * @param userId ID of the user.
      * @return an authorized Calendar client service
      * @throws IOException
      */
     private static com.google.api.services.calendar.Calendar
-        getCalendarService() throws IOException {
-        Credential credential = authorize();
+        getCalendarService(String userId) throws IOException {
+        Credential credential = getStoredCredential(userId);
+        if (credential == null) {
+            return null;
+        }
         return new com.google.api.services.calendar.Calendar.Builder(
                 HTTP_TRANSPORT, JSON_FACTORY, credential)
                 .setApplicationName(APPLICATION_NAME)
@@ -153,34 +237,6 @@ public class GoogleCalendarApiAccess {
     }
             
     /**
-     * Creates an event on the given calendar id.
-     * @param eventSummary Name of the event.
-     * @param startDate Start date of the event.
-     * @param endDate End date of the event.
-     * @param service Google calendar API authorized calendar client service.
-     * @param calId Id of the calendar to create the event on.
-     * @throws IOException 
-     */
-    private static void createEvent(String eventSummary,
-                    Date startDate,
-                    Date endDate,
-                    com.google.api.services.calendar.Calendar service,
-                    String calId) throws IOException {
-        com.google.api.services.calendar.model.Event target = new Event();
-        target.setSummary(eventSummary);
-        target.setLocation("");
-
-        target.setAttendees(new ArrayList<>());
-        com.google.api.client.util.DateTime start = new DateTime(true, startDate.getTime(), TimeZone.getTimeZone("America/New_York").getRawOffset());
-        com.google.api.client.util.DateTime end = new DateTime(true, endDate.getTime(), TimeZone.getTimeZone("America/New_York").getRawOffset()); 
-        target.setStart(new EventDateTime().setDate(start));
-        target.setEnd(new EventDateTime().setDate(end));
-        com.google.api.services.calendar.model.Event createdEvent
-                = service.events().insert(calId, target).execute();
-        System.out.println("Event created: " + createdEvent.getHtmlLink());
-    }
-    
-    /**
      * Populates a given calendar with events given a duty calendar.
      * @param calId Calendar to populate
      * @param dutyCal List of duty blocks to populate the calendar with.
@@ -214,54 +270,48 @@ public class GoogleCalendarApiAccess {
             createEvent(eventName.toString(), startDate, endDate, service, calId);
         }
     }
-    
+            
     /**
-     * Creates a new Calendar and populates it with duty events.
-     * @param calName Name of the calendar to create.
-     * @param dutyCal List of DutyBlock objects to populate the calendar with.
-     * @return 0 if successful, -2 if an error occurs.
+     * Creates an event on the given calendar id.
+     * @param eventSummary Name of the event.
+     * @param startDate Start date of the event.
+     * @param endDate End date of the event.
+     * @param service Google calendar API authorized calendar client service.
+     * @param calId Id of the calendar to create the event on.
+     * @throws IOException 
      */
-    public static int createNewDutyCalendar(String calName, ArrayList<DutyBlock> dutyCal) {
-        try {
-            com.google.api.services.calendar.Calendar service = getCalendarService();
-            com.google.api.services.calendar.model.Calendar createdCal = createNewCalendar(service, calName);
-            populateCalendar(service, createdCal.getId(), dutyCal);
-            return 0;
-        } catch (IOException e) {
-            System.out.println("An error occured while connecting to Google");
-            System.out.println(e);
-            return -2;
-        }
-    }
-    
-    /**
-     * Retrieves an existing Calendar and populates it with duty events.
-     * @param calId Id of the calendar to populate.
-     * @param dutyCal List of DutyBlock objects to populate the calendar with.
-     * @return 0 if successful, -1 if retrieval failed, -2 if population failed.
-     */
-    public static int populateExistingDutyCalendar(String calId, ArrayList<DutyBlock> dutyCal) {
-        try {
-            com.google.api.services.calendar.Calendar service = getCalendarService();
-            com.google.api.services.calendar.model.Calendar retrievedCal = getCalendar(service, calId);
-            if (retrievedCal != null) {
-                populateCalendar(service, retrievedCal.getId(), dutyCal);
-                return 0;
-            } else {
-                return -1;
-            }
-        } catch (IOException e) {
-            System.out.println("An error occured while connecting to Google");
-            System.out.println(e);
-            return -2;
-        }
+    private static void createEvent(String eventSummary,
+                    Date startDate,
+                    Date endDate,
+                    com.google.api.services.calendar.Calendar service,
+                    String calId) throws IOException {
+        com.google.api.services.calendar.model.Event target = new Event();
+        target.setSummary(eventSummary);
+        target.setLocation("");
+        target.setAttendees(new ArrayList<>()); //TODO: Set attendees to RA on duty & send email reminders.
+        //Create a date-only DateTime object representing the startDate.
+        com.google.api.client.util.DateTime start = new DateTime(
+                true,
+                startDate.getTime(),
+                TimeZone.getTimeZone("America/New_York").getRawOffset()); //TODO: Set timezones properly.
+        //Create a date-only DateTime object representing the endDate.
+        com.google.api.client.util.DateTime end = new DateTime(
+                true,
+                endDate.getTime(),
+                TimeZone.getTimeZone("America/New_York").getRawOffset()); 
+        //Set start and end dates.
+        target.setStart(new EventDateTime().setDate(start));
+        target.setEnd(new EventDateTime().setDate(end));
+        com.google.api.services.calendar.model.Event createdEvent
+                = service.events().insert(calId, target).execute();
+        System.out.println("Event created: " + createdEvent.getHtmlLink());
     }
     
     public static void main(String[] args) {
         try (Scanner input = new Scanner(System.in)) {
             //Creates an authorized google Calendar service.
             com.google.api.services.calendar.Calendar service =
-                    getCalendarService();
+                    getCalendarService("USER ID");
             
             //Asks for the calendar ID.
             System.out.println("Please enter your Calendar ID (blank for new Calendar)");
@@ -277,7 +327,7 @@ public class GoogleCalendarApiAccess {
                 targetCal = getCalendar(service, calId);
             }
             
-            //
+            //Creates a single event on the calendar.
             if (targetCal != null) {
                 createEvent("IT WORKS", new Date(115, 04, 28), new Date(115, 04, 28),
                         service, targetCal.getId());
