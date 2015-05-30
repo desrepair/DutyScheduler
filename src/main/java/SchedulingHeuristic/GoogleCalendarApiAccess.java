@@ -41,7 +41,7 @@ public class GoogleCalendarApiAccess {
         "DutyScheduler";
     
     private static final String REDIRECT_URI =
-            "urn:ietf:wg:oauth:2.0:oob";
+            "http://khetthail.me:4567/oauth2callback";
 
     /** Directory to store user credentials. */
     private static final java.io.File DATA_STORE_DIR = new java.io.File(
@@ -103,7 +103,7 @@ public class GoogleCalendarApiAccess {
      */
     public static String requestAuthorizationCode() throws IOException {
         //Create a url where the user goes to give authorization.
-        String url =  flow.newAuthorizationUrl().setRedirectUri(REDIRECT_URI).build(); //TODO: URI
+        String url =  flow.newAuthorizationUrl().setRedirectUri(REDIRECT_URI).build();
         System.out.println("URL: " + url);
         return url;
     }
@@ -117,7 +117,7 @@ public class GoogleCalendarApiAccess {
      */
     public static Credential getTokenCredential(String code, String userId) throws IOException {
         //Once we redirect the user to the login/consent page, wait for the authorization code and send a token request.
-        GoogleTokenResponse res = flow.newTokenRequest(code).setRedirectUri(REDIRECT_URI).execute(); //TODO: URI
+        GoogleTokenResponse res = flow.newTokenRequest(code).setRedirectUri(REDIRECT_URI).execute();
         Credential credential = flow.createAndStoreCredential(res, userId);
         System.out.println("Credential created: " + credential.getAccessToken());
         System.out.println(
