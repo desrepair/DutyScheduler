@@ -1,8 +1,13 @@
 package SchedulingHeuristic;
 
+import com.google.api.client.auth.oauth2.Credential;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Test {
     public static void main(String[] args) {
@@ -25,11 +30,26 @@ public class Test {
         micksBlackout.add(LocalDate.of(2015, 05, 20));
         micksBlackout.add(LocalDate.of(2015, 05, 21));
         cal.addRa("Mick", micksBlackout);
-        cal.addRa("Wenlan's Chosen", new ArrayList<>());
-        cal.addRa("Yujin's Mom", new ArrayList<>());
-        cal.addRa("Jatao", new ArrayList<>());
-        cal.assignDuty();
+        cal.addRa("Tatev", new ArrayList<>());
+        cal.addRa("David", new ArrayList<>());
+        cal.addRa("Cliff", new ArrayList<>());
+        ArrayList<DutyBlock> result = cal.assignDuty();
         System.out.println(cal);
         System.out.println(cal.printRaPointValues());
+        
+        try (Scanner input = new Scanner(System.in);) {
+            Credential cred = GoogleCalendarApiAccess.getStoredCredential("id_1");
+            if (cred == null) {
+                System.out.println("Paste this code into your browser.");
+                System.out.println(GoogleCalendarApiAccess.requestAuthorizationCode());
+                System.out.println("Enter code and press enter.");
+                String code = input.nextLine();
+                GoogleCalendarApiAccess.getTokenCredential(code, "id_1");
+                cred = GoogleCalendarApiAccess.getStoredCredential("id_1");
+            }
+            GoogleCalendarApiAccess.createNewDutyCalendar("Test", "id_1", result);
+        } catch (IOException ex) {
+            Logger.getLogger(Test.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }
