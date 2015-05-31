@@ -2,28 +2,38 @@
 
 var React = require('react');
 
+var DutyStore = require('./stores/DutyStore');
+
 var MemberList = require('./views/MemberList');
 
-var MOCK_DATA = {
-  members: [
-    {
-      name: "Mick"
-    },
-    {
-      name: "Yujin"
-    }
-  ]
-};
+function getState() {
+  return {
+    members: DutyStore.getMembers(),
+  }
+}
 
 var DutyScheduler = React.createClass({
   getInitialState: function() {
-    return {data: MOCK_DATA};
+    return getState();
   },
+
+  componentDidMount: function() {
+    DutyStore.addChangeListener(this._onChange);
+  },
+
+  componentDidUnmount: function() {
+    DutyStore.removeChangeListener(this._onChange);
+  },
+
   render: function() {
     return (
-      <MemberList data={this.state.data.members}>
+      <MemberList members={this.state.members}>
       </MemberList>
     );
+  },
+
+  _onChange: function() {
+    this.setState(getState());
   }
 });
 
