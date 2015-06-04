@@ -3,6 +3,7 @@ package SchedulingHeuristic;
 import java.util.ArrayList;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import org.bson.Document;
 
 /**
  * Represents an RA.
@@ -26,6 +27,38 @@ public class Ra implements Comparable<Ra> {
         blackoutDates = b;
         previousDutyDay = DutyCalendar.currentBlock.getStartDate();
         dutyDays = new ArrayList<>();
+    }
+    
+    public Ra(String n, Double points, LocalDate prev, ArrayList<LocalDate> blackout, ArrayList<LocalDate> duty) {
+        name = n;
+        pointsTaken = points;
+        previousDutyDay = prev;
+        blackoutDates = blackout;
+        dutyDays = duty;
+    }
+    
+    public String getName() {
+        return name;
+    }
+    
+    /**
+     * Returns the point value of duty assigned to the RA.
+     * @return Point value of duty assigned to the RA in double form.
+     */
+    public double getPointsTaken() {
+        return pointsTaken;
+    }
+    
+    public LocalDate getPreviousDutyDay() {
+        return previousDutyDay;
+    }
+    
+    public ArrayList<LocalDate> getBlackoutDates() {
+        return blackoutDates;
+    }
+    
+    public ArrayList<LocalDate> getDutyDays() {
+        return dutyDays;
     }
     
     /**
@@ -68,14 +101,6 @@ public class Ra implements Comparable<Ra> {
     }
     
     /**
-     * Returns the point value of duty assigned to the RA.
-     * @return Point value of duty assigned to the RA in double form.
-     */
-    public double getPointsTaken() {
-        return pointsTaken;
-    }
-    
-    /**
      * Calculates the RA's priority for a certain duty day.
      * Lower value indicates higher priority.
      * @param b Block to determine RA's priority for.
@@ -103,5 +128,19 @@ public class Ra implements Comparable<Ra> {
     @Override
     public String toString() {
         return name;
+    }
+    
+    /**
+     * Creates a BSON representation of the object.
+     * @return A BSON representation of the object.
+     */
+    public Document toBson() {
+        Document document = new Document();
+        document.append("name", name)
+                .append("pointsTaken", pointsTaken)
+                .append("previousDutyDay", previousDutyDay)
+                .append("blackoutDates", blackoutDates)
+                .append("dutyDays", dutyDays);
+        return document;
     }
 }

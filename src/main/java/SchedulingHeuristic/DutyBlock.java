@@ -2,6 +2,7 @@ package SchedulingHeuristic;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import org.bson.Document;
 
 /**
  * Represents a block of duty.
@@ -25,6 +26,14 @@ public class DutyBlock {
         endDate = startDate.plusDays(length-1);
         pointValue = 0;
         assigned = new ArrayList<>();
+    } 
+    
+    public DutyBlock(LocalDate start, LocalDate end, int length, double points, ArrayList<Ra> onDuty) {
+        startDate = start;
+        endDate = end;
+        blockLength = length;
+        pointValue = points;
+        assigned = onDuty;
     }
     
     /**
@@ -53,7 +62,7 @@ public class DutyBlock {
     
     /**
      * Returns the start date of the duty block.
-     * @return Start date of the duty day.
+     * @return Start date of the duty block.
      */
     public LocalDate getStartDate() {
         return startDate;
@@ -61,10 +70,18 @@ public class DutyBlock {
     
     /**
      * Returns the end date of the duty block.
-     * @return End date of the duty day.
+     * @return End date of the duty block.
      */
     public LocalDate getEndDate() {
         return endDate;
+    }
+    
+    /**
+     * Returns the block length of the duty block.
+     * @return Block length of duty block.
+     */
+    public int getBlockLength() {
+        return blockLength;
     }
     
     /**
@@ -81,5 +98,19 @@ public class DutyBlock {
      */
     public ArrayList<Ra> getRasOnDuty() {
         return assigned;
+    }
+    
+    public Document toBson() {
+        Document blkdoc = new Document();
+        blkdoc.append("startDate", startDate);
+        blkdoc.append("endDate", endDate);
+        blkdoc.append("blockLength", blockLength);
+        blkdoc.append("pointValue", pointValue);
+        ArrayList<Document> ras = new ArrayList<>();
+        for (Ra ra : assigned) {
+            ras.add(ra.toBson());
+        }
+        blkdoc.append("assigned", ras);
+        return blkdoc;
     }
 }

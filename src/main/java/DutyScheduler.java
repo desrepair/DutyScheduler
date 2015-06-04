@@ -1,7 +1,10 @@
 
+import DutyDatabase.DutyScheduleDB;
 import java.util.UUID;
 
 import static spark.Spark.*;
+
+import com.google.api.client.auth.oauth2.Credential;
 
 import SchedulingHeuristic.*;
 
@@ -9,6 +12,7 @@ public class DutyScheduler {
 
 
     public static void main(String[] args) {
+        DutyScheduleDB database = new DutyScheduleDB();
          
         get("/", (request, response) -> {
             //Associate cookie.
@@ -22,13 +26,21 @@ public class DutyScheduler {
         });
         
         get("/submitCal", (request, response) -> {
-            //Create Duty Calendar
             //Associate cookie.
             String uuid = request.cookie("DutyScheduler");
             if (uuid == null) {
                 uuid = UUID.randomUUID().toString();
                 response.cookie("DutyScheduler", uuid);
             }
+            //Parse request and create Duty Calendar
+            //Parse JSON.
+            //DutyCalendar calendar = new DutyCalendar(LocalDate.MIN, LocalDate.MIN, 1, 1);
+            //calendar.setDayValues(null);
+            //calendar.addRa("Mick", new ArrayList<LocalDate>());
+            //calendar.addRA("David", new ArrayList<LocalDate>());
+            //ArrayList<DutyBlock> blocks = calendar.assignDuty();
+            //Persist in database
+            //database.storeScheduledCalendar(uuid, request.name(), blocks);
             //Returns a scheduled calendar.
             return "You have submitted a calendar.";
         });
@@ -41,7 +53,7 @@ public class DutyScheduler {
                 response.cookie("DutyScheduler", uuid);
             }
             //Check for authorization.
-            com.google.api.client.auth.oauth2.Credential credential
+            Credential credential
                     = GoogleCalendarApiAccess.getStoredCredential(uuid); //TODO: ID system.
             //If not authorized, redirect to authorization.
             if (credential == null) {
@@ -71,7 +83,7 @@ public class DutyScheduler {
             String[] parts = authCode.split("=");
             if (parts[0].equals("code")) {
                 //Requests token.
-                com.google.api.client.auth.oauth2.Credential credential
+                Credential credential
                         = GoogleCalendarApiAccess.getTokenCredential(
                         parts[1],
                         uuid); //TODO: Get ID here.
@@ -90,20 +102,21 @@ public class DutyScheduler {
             //Check for cookie.
             String uuid = request.cookie("DutyScheduler");
             if (uuid == null) {
-                halt(401, "Missing required cookie");
+                halt(401, "Missing required cookie. Please visit main page.");
             }
             //Check for authentication.
-            com.google.api.client.auth.oauth2.Credential credential
+            Credential credential
                     = GoogleCalendarApiAccess.getStoredCredential(uuid);
             if (credential == null) {
                 halt(401, "Unauthorized");
             }
-            //Create calendar based on JSON.
+            //Retrieve scheduled calendar.
+            //ArrayList<DutyBlock> blocks = database.getScheduledCalendar(uuid, request.name());
             //Push calendar to Google.
+            //GoogleCalendarApiAccess.createNewDutyCalendar(calendar.getName(), uuid, calendar.getCalendar());
             return "Your calendar has been exported to your Google Calendar";
         });
 
         System.out.println("Server online.");
     }
-
 }
