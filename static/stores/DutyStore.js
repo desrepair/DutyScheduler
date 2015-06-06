@@ -17,6 +17,7 @@ var _members = {
     name: 'Yujin',
   }
 };
+var _selected = null;
 var _blacklists = {};
 var _points = {};
 
@@ -42,11 +43,24 @@ function removeMember(id) {
   delete _blacklists[id];
 }
 
+function toggleSelectMember(id) {
+  if (_selected == id) {
+    _selected = null;
+  }
+  else {
+    _selected = id;
+  }
+}
+
 // BLACKLIST API
 
 
 
 var DutyStore = assign({}, EventEmitter.prototype, {
+
+  getSelectedMember: function() {
+    return _selected;
+  },
 
   getMembers: function() {
     return _members;
@@ -92,7 +106,10 @@ AppDispatcher.register(function(action) {
       DutyStore.emitChange();
       break;
 
-
+    case DutyConstants.DUTY_TOGGLE_SELECT_MEMBER:
+      toggleSelectMember(action.id);
+      DutyStore.emitChange();
+      break;
 
     default:
       //no-op

@@ -4,26 +4,30 @@ var React = require('react');
 var ReactBootstrap = require('react-bootstrap');
 var ListGroupItem = ReactBootstrap.ListGroupItem;
 var DutyActions = require('../../actions/DutyActions');
+var m = require('../../utils/Utilities').m;
 
 var styles = {
+  cell: {
+    cursor: 'pointer',
+  },
   input: {
     width: 200,
     display: 'inline',
   },
-  iconDelete: {
+  icon: {
     fontSize: '18',
+  },
+  iconSelected: {
+    color: 'white',
+  },
+  iconDelete: {
     color: 'red',
-    cursor: 'pointer',
   },
   iconDone: {
-    fontSize: '18',
     color: 'green',
-    cursor: 'pointer',
   },
   iconEdit: {
-    fontSize: '18',
     color: 'gray',
-    cursor: 'pointer',
   },
 }
 
@@ -33,8 +37,11 @@ var MemberCell = React.createClass({
   },
   componentDidUpdate: function(prevProps, prevState) {
     if (!prevState.editing && this.state.editing) {
-      React.findDOMNode(this.refs.input).select();
+      React.findDOMNode(this.refs["input-" + this.props.memberID]).select();
     }
+  },
+  handleCellClick: function() {
+    DutyActions.toggleSelectMember(this.props.memberID);
   },
   handleSubmit: function(e) {
     e.preventDefault();
@@ -59,7 +66,7 @@ var MemberCell = React.createClass({
     if (this.state.editing) {
       leftElement = (
           <input type="text"
-                 ref="input"
+                 ref={"input-" + this.props.memberID}
                  className="form-control input-group-sm"
                  placeholder="Name of RA"
                  value={this.state.name}
@@ -69,14 +76,14 @@ var MemberCell = React.createClass({
       );
       var deleteButton = (
         <i className="fa fa-remove fa-fw"
-           style={styles.iconDelete}
+           style={m(styles.icon, styles.iconDelete)}
            key="delete"
            onClick={this.handleRemove}>
         </i>
       );
       var doneButton = (
         <i className="fa fa-check fa-fw"
-           style={styles.iconDone}
+           style={m(styles.icon, styles.iconDone)}
            key="done"
            onClick={this.handleDone}>
         </i>
@@ -91,7 +98,8 @@ var MemberCell = React.createClass({
       );
       var editButton = (
         <i className="fa fa-edit fa-fw"
-           style={styles.iconEdit}
+           style={m(styles.icon, styles.iconEdit,
+                    this.props.selected && styles.iconSelected)}
            key="edit"
            onClick={this.handleEdit}>
         </i>
@@ -99,7 +107,9 @@ var MemberCell = React.createClass({
       rightElements.push(editButton);
     }
     return (
-      <ListGroupItem>
+      <ListGroupItem className={this.props.selected ? "active" : ""}
+                     style={styles.cell}
+                     onClick={this.handleCellClick}>
         <form className="inline-form"
               onSubmit={this.handleSubmit}>
           {leftElement}

@@ -20,10 +20,14 @@ var MemberList = React.createClass({
   render: function() {
     var member_data = this.props.members;
     var members = [];
+    var selected = DutyStore.getSelectedMember();
 
-    for (var key in member_data) {
+    for (var id in member_data) {
       members.push(
-        <MemberCell key={key} member={member_data[key]} memberID={key}>
+        <MemberCell key={id}
+                    member={member_data[id]}
+                    memberID={id}
+                    selected={selected == id}>
         </MemberCell>
       );
     }

@@ -26,7 +26,12 @@ var DutyActions = {
     });
   },
 
-
+  toggleSelectMember: function(id) {
+    AppDispatcher.dispatch({
+      actionType: DutyConstants.DUTY_TOGGLE_SELECT_MEMBER,
+      id: id,
+    });
+  },
 };
 
 module.exports = DutyActions;
