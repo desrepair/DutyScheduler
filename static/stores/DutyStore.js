@@ -12,10 +12,12 @@ var CHANGE_EVENT = 'change';
 var _members = {
   '0123': {
     name: 'Mick',
+    email: 'abcd@gmail.com',
   },
   '1234': {
     name: 'Yujin',
-  }
+    email: 'bcde@gmail.com',
+  },
 };
 var _blacklists = {};
 var _points = {};
@@ -91,13 +93,21 @@ AppDispatcher.register(function(action) {
       }
       DutyStore.emitChange();
       break;
-
-
-
+    case DutyConstants.DUTY_UPDATE_MEMBER_EMAIL:
+      var email = action.email.trim();
+      if (email != '') {
+        updateMember(action.id, {email: email});
+      }
+      DutyStore.emitChange();
+      break;
+    case DutyConstants.DUTY_REMOVE_MEMBER_EMAIL:
+      updateMember(action.id, {email: ""});
+      DutyStore.emitChange();
+      break;
     default:
       //no-op
       console.log('unrecognized type ' + action.actionType);
   }
-})
+});
 
 module.exports = DutyStore;

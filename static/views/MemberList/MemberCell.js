@@ -29,7 +29,7 @@ var styles = {
 
 var MemberCell = React.createClass({
   getInitialState: function() {
-    return { editing: false, name: "" };
+    return { editing: false, editEmail: false, name: "", email: "" };
   },
   componentDidUpdate: function(prevProps, prevState) {
     if (!prevState.editing && this.state.editing) {
@@ -44,15 +44,30 @@ var MemberCell = React.createClass({
     this.setState({name: event.target.value});
   },
   handleEdit: function() {
-    this.setState({editing: true, name: this.props.member.name});
+    this.setState({editing: true, editEmail: false, name: this.props.member.name});
   },
   handleRemove: function() {
     DutyActions.removeMember(this.props.memberID);
   },
   handleDone: function() {
-    this.setState({editing: false});
+    this.setState({editing: false, editEmail: false});
     DutyActions.updateMemberName(this.props.memberID, this.state.name);
   },
+  handleEmailEdit: function() {
+    this.setState({editing: false, editEmail: true, email: this.props.member.email});
+  },
+  handleEmailChange: function(event) {
+    this.setState({email: event.target.value});
+  },
+  handleEmailDelete: function() {
+    this.setState({editing:false, editEmail: false});
+    DutyActions.removeMemberEmail(this.props.memberID);
+  },
+  handleEmailDone: function() {
+    this.setState({editing: false, editEmail: false});
+    DutyActions.updateMemberEmail(this.props.memberID, this.state.email);
+  },
+
   render: function() {
     var leftElement;
     var rightElements = [];
@@ -83,6 +98,33 @@ var MemberCell = React.createClass({
       );
       rightElements.push(deleteButton, doneButton);
     }
+    else if(this.state.editEmail) {
+      leftElement = (
+        <input type="text"
+          ref="input"
+          className="form-control input-group-sm"
+          placeholder="Email of RA"
+          value={this.state.email}
+          style={styles.input}
+          onChange={this.handleEmailChange}>
+        </input>
+      );
+      var deleteButton = (
+        <i className="fa fa-remove fa-fw"
+           style={styles.iconDelete}
+           key="delete"
+           onClick={this.handleEmailDelete}>
+        </i>
+      );
+      var doneButton = (
+        <i className = "fa fa-check fa-fw"
+           style={styles.iconDone}
+           key="done"
+           onClick={this.handleEmailDone}>
+        </i>
+      );
+      rightElements.push(deleteButton, doneButton);
+    }
     else {
       leftElement = (
         <span>
@@ -96,7 +138,14 @@ var MemberCell = React.createClass({
            onClick={this.handleEdit}>
         </i>
       );
-      rightElements.push(editButton);
+      var emailButton = (
+        <i className="fa fa-edit fa-fw"
+          style={styles.iconEdit}
+          key="email"
+          onClick={this.handleEmailEdit}>
+        </i>
+      );  
+      rightElements.push(editButton, emailButton);
     }
     return (
       <ListGroupItem>

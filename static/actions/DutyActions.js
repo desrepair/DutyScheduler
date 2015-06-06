@@ -26,6 +26,20 @@ var DutyActions = {
     });
   },
 
+  updateMemberEmail: function(id, email) {
+    AppDispatcher.dispatch({
+      actionType: DutyConstants.DUTY_UPDATE_MEMBER_EMAIL,
+      id: id,
+      email: email,
+    });
+  },
+  
+  removeMemberEmail: function(id) {
+    AppDispatcher.dispatch({
+      actionType: DutyConstants.DUTY_REMOVE_MEMBER_EMAIL,
+      id: id,
+    });
+  },
 
 };
 
