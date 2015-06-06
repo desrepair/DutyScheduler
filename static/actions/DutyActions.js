@@ -15,6 +15,7 @@ var DutyActions = {
     AppDispatcher.dispatch({
       actionType: DutyConstants.DUTY_UPDATE_MEMBER_NAME,
       name: name,
+      id: id,
     });
   },
 

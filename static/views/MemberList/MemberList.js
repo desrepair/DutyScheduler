@@ -10,20 +10,9 @@ var DutyStore = require('../../stores/DutyStore');
 var MemberCell = require('./MemberCell');
 var AddCell = require('./AddCell');
 
-var MOCK_DATA = {
-  members: [
-    {
-      name: "Mick"
-    },
-    {
-      name: "Yujin"
-    }
-  ]
-};
-
 var styles = {
   div: {
-    width: '30%'
+    width: '300'
   }
 };
 
@@ -34,7 +23,7 @@ var MemberList = React.createClass({
 
     for (var key in member_data) {
       members.push(
-        <MemberCell key={key} member={member_data[key]}>
+        <MemberCell key={key} member={member_data[key]} memberID={key}>
         </MemberCell>
       );
     }
