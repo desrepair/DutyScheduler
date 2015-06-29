@@ -1,15 +1,19 @@
+package DutySchedulerApi;
+
 
 import DutyDatabase.DutyScheduleDB;
-import java.util.UUID;
-
-import static spark.Spark.*;
-
+import SchedulingHeuristic.DutyBlock;
+import SchedulingHeuristic.DutyCalendar;
 import com.google.api.client.auth.oauth2.Credential;
-
-import SchedulingHeuristic.*;
+import java.util.UUID;
+import static spark.Spark.*;
+import com.google.gson.*;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 
 public class DutyScheduler {
-
 
     public static void main(String[] args) {
         DutyScheduleDB database = new DutyScheduleDB();
@@ -25,24 +29,49 @@ public class DutyScheduler {
             return "This is the main page.";
         });
         
-        get("/submitCal", (request, response) -> {
+        post("/submitCal", (request, response) -> {
             //Associate cookie.
             String uuid = request.cookie("DutyScheduler");
             if (uuid == null) {
                 uuid = UUID.randomUUID().toString();
                 response.cookie("DutyScheduler", uuid);
             }
+            
             //Parse request and create Duty Calendar
-            //Parse JSON.
-            //DutyCalendar calendar = new DutyCalendar(LocalDate.MIN, LocalDate.MIN, 1, 1);
-            //calendar.setDayValues(null);
-            //calendar.addRa("Mick", new ArrayList<LocalDate>());
-            //calendar.addRA("David", new ArrayList<LocalDate>());
-            //ArrayList<DutyBlock> blocks = calendar.assignDuty();
-            //Persist in database
-            //database.storeScheduledCalendar(uuid, request.name(), blocks);
-            //Returns a scheduled calendar.
-            return "You have submitted a calendar.";
+            GsonBuilder gsonBuilder = new GsonBuilder();
+            gsonBuilder.registerTypeAdapter(LocalDate.class, new LocalDateSerializer());
+            gsonBuilder.registerTypeAdapter(LocalDate.class, new LocalDateDeserializer());
+            gsonBuilder.registerTypeAdapter(LocalDate.class, new LocalDateInstanceCreator());
+            Gson gson = gsonBuilder.create();
+            CalendarCreationRequest content = gson.fromJson(request.body(),
+                    CalendarCreationRequest.class);
+            
+            DutyCalendar calendar = new DutyCalendar(
+                    content.getStartDate(),
+                    content.getEndDate(),
+                    content.getBlockSize(),
+                    content.getRasPerBlock());
+            
+            //Set duty block points.
+            HashMap<LocalDate, Double> dayValues = new HashMap<>();
+            for (DayPoints day : content.getPointsPerDay()) {
+                dayValues.put(day.getDate(), day.getPointValue());
+            }
+            calendar.setDayValues(dayValues);
+            
+            //Set RA blackout dates.
+            for (RaBlackoutDates ra : content.getRas()) {
+                calendar.addRa(
+                        ra.getName(),
+                        new ArrayList<>(Arrays.asList(ra.getBlackoutDates())));
+            }
+            
+            ArrayList<DutyBlock> blocks = calendar.assignDuty();
+            System.out.println("\n____________");
+            System.out.println(calendar.toString());
+            System.out.println(calendar.printRaPointValues());
+            database.storeScheduledCalendar(uuid, content.getCalendarName(), blocks);
+            return gson.toJson(blocks);
         });
         
         get("/authorize", (request, response) -> {

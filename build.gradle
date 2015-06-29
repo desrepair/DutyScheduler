@@ -1,7 +1,7 @@
 apply plugin: 'java'
 apply plugin: 'application'
 
-mainClassName = 'DutyDatabase.DutyScheduleDB'
+mainClassName = 'DutySchedulerApi.DutyScheduler'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 version = '1.0'
@@ -16,6 +16,8 @@ dependencies {
     compile 'com.sparkjava:spark-core:2.1'
     compile 'com.google.oauth-client:google-oauth-client-jetty:1.20.0'
     compile 'org.mongodb:mongo-java-driver:3.0.2'
+    compile 'org.json:json:20141113'
+    compile 'com.google.code.gson:gson:2.3.1'
     testCompile 'junit:junit:4.12'
 }
 
@@ -24,5 +26,5 @@ run {
 }
 
 if (!hasProperty('mainClass')) {
-    ext.mainClass = 'DutyDatabase.DutyScheduleDB'
+    ext.mainClass = 'DutySchedulerApi.DutyScheduler'
 }

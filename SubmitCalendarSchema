@@ -1,0 +1,18 @@
+{
+	"calendarName": "calName",
+	"startDate": "2015-08-24",
+	"endDate": "2015-12-18",
+	"blockSize": "1",
+	"rasPerBlock": "1",
+	"pointsPerDay": [
+		{"date": "2015-08-24", "pointValue": 1},
+		{"date": "2015-08-25", "pointValue": 1},
+		...
+		{"date": "2015-12-22", "pointValue": 2}
+	],
+	"ras": [
+		{"name": "Mick", "blackoutDates": ["2015-09-04", "2015-10-13"]},
+		{"name": "Wenlan", "blackoutDates": ["2015-10-20", "2015-12-7"]},
+		{"name": "Yujin", "blackoutDates": ["2015-11-21"]}
+	]
+}
