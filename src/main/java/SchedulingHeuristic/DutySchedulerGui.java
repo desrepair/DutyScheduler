@@ -98,6 +98,7 @@ public class DutySchedulerGui {
     private JButton SubmitToGCalButton;
 
     private HashMap<String, ArrayList<LocalDate>> raBlackoutMap;
+    private HashMap<LocalDate, Double> exceptionMap;
     private ArrayList<DutyBlock> schedule;
 
     public DutySchedulerGui() {
@@ -108,6 +109,7 @@ public class DutySchedulerGui {
         }
 
         raBlackoutMap = new HashMap<>();
+        exceptionMap = new HashMap<>();
         schedule = new ArrayList<>();
 
         RaList.setModel(new DefaultListModel<>());
@@ -138,7 +140,42 @@ public class DutySchedulerGui {
             BlackoutDateYearComboBox.addItem(String.valueOf(i));
         }
 
+        ExceptionDayValueButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String input = JOptionPane.showInputDialog(
+                        null,
+                        "Enter exceptions in this format: YYYY-MM-DD,<POINT VALUE>;YYYY-MM-DD,<POINT VALUE>;ect.",
+                        "Enter exceptions",
+                        JOptionPane.QUESTION_MESSAGE);
+
+                if (input.isEmpty()) {
+                    exceptionMap.clear();
+                    return;
+                }
+                String[] tokens = input.split(";");
+                for (String token : tokens) {
+                    String[] pieces = token.split(",");
+                    LocalDate date = LocalDate.parse(pieces[0]);
+                    double point = Double.parseDouble(pieces[1]);
+                    exceptionMap.put(date, point);
+                }
+            }
+        });
+
         AddRaButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String raName = AddRaTextField.getText();
+                raBlackoutMap.put(raName, new ArrayList<>());
+                DefaultListModel model = (DefaultListModel) RaList.getModel();
+                model.addElement(raName);
+                AddRaTextField.setText("");
+                AddRaTextField.requestFocusInWindow();
+            }
+        });
+
+        AddRaTextField.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String raName = AddRaTextField.getText();
@@ -252,28 +289,32 @@ public class DutySchedulerGui {
 
                 try {
                     for (LocalDate date = start; date.isBefore(end.plusDays(1)); date = date.plusDays(1)) {
-                        switch (date.getDayOfWeek()) {
-                            case MONDAY:
-                                dayValues.put(date, Double.parseDouble(MonDayValueTextField.getText()));
-                                break;
-                            case TUESDAY:
-                                dayValues.put(date, Double.parseDouble(TueDayValueTextField.getText()));
-                                break;
-                            case WEDNESDAY:
-                                dayValues.put(date, Double.parseDouble(WedDayValueTextField.getText()));
-                                break;
-                            case THURSDAY:
-                                dayValues.put(date, Double.parseDouble(ThursDayValueTextField.getText()));
-                                break;
-                            case FRIDAY:
-                                dayValues.put(date, Double.parseDouble(FriDayValueTextField.getText()));
-                                break;
-                            case SATURDAY:
-                                dayValues.put(date, Double.parseDouble(SatDayValueTextField.getText()));
-                                break;
-                            case SUNDAY:
-                                dayValues.put(date, Double.parseDouble(SunDayValueTextField.getText()));
-                                break;
+                        if (exceptionMap.containsKey(date)) {
+                            dayValues.put(date, exceptionMap.get(date));
+                        } else {
+                            switch (date.getDayOfWeek()) {
+                                case MONDAY:
+                                    dayValues.put(date, Double.parseDouble(MonDayValueTextField.getText()));
+                                    break;
+                                case TUESDAY:
+                                    dayValues.put(date, Double.parseDouble(TueDayValueTextField.getText()));
+                                    break;
+                                case WEDNESDAY:
+                                    dayValues.put(date, Double.parseDouble(WedDayValueTextField.getText()));
+                                    break;
+                                case THURSDAY:
+                                    dayValues.put(date, Double.parseDouble(ThursDayValueTextField.getText()));
+                                    break;
+                                case FRIDAY:
+                                    dayValues.put(date, Double.parseDouble(FriDayValueTextField.getText()));
+                                    break;
+                                case SATURDAY:
+                                    dayValues.put(date, Double.parseDouble(SatDayValueTextField.getText()));
+                                    break;
+                                case SUNDAY:
+                                    dayValues.put(date, Double.parseDouble(SunDayValueTextField.getText()));
+                                    break;
+                            }
                         }
                     }
                 } catch (NumberFormatException ex) {

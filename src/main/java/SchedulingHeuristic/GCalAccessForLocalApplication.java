@@ -228,7 +228,7 @@ public class GCalAccessForLocalApplication {
             LocalDate end = block.getEndDate();
             Date endDate = new Date(end.getYear() - 1900,
                     end.getMonthValue() - 1,
-                    end.getDayOfMonth());
+                    end.getDayOfMonth() + 1);
 
             Iterator<Ra> iterator = block.getRasOnDuty().iterator();
             StringBuilder eventName = new StringBuilder();
@@ -249,7 +249,7 @@ public class GCalAccessForLocalApplication {
      * Creates an event on the given calendar id.
      * @param eventSummary Name of the event.
      * @param startDate Start date of the event.
-     * @param endDate End date of the event.
+     * @param endDate End date of the event, exclusive.
      * @param service Google calendar API authorized calendar client service.
      * @param calId Id of the calendar to create the event on.
      * @throws IOException
