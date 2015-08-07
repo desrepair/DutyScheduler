@@ -68,7 +68,6 @@ public class DutyCalendar {
      * @return DutyBlock object corresponding to the specified date in the duty calendar.
      */
     private DutyBlock getDutyBlock(LocalDate toGet) {
-        DutyBlock closestBlock = dutyCalendar.get(0);
         for (DutyBlock block : dutyCalendar) {
             if (block.getStartDate().equals(toGet)) {
                 return block;
