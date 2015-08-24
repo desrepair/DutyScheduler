@@ -242,6 +242,12 @@ public class GCalAccessForLocalApplication {
                 eventName.append(iterator.next().toString());
             }
             createEvent(eventName.toString(), startDate, endDate, service, calId);
+
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
         }
     }
 

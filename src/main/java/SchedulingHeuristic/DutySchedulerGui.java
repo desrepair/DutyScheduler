@@ -183,6 +183,10 @@ public class DutySchedulerGui {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String raName = AddRaTextField.getText();
+                raName = raName.trim();
+                if (raName.isEmpty()) {
+                    return;
+                }
                 raBlackoutMap.put(raName, new ArrayList<>());
                 DefaultListModel model = (DefaultListModel) RaList.getModel();
                 model.addElement(raName);
