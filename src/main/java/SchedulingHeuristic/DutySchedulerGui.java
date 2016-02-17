@@ -100,6 +100,8 @@ public class DutySchedulerGui {
     private JLabel CalendarNameLabel;
     private JTextField CalendarNameTextField;
     private JButton SubmitToGCalButton;
+    private JRadioButton NewCalendarRadioButton;
+    private JRadioButton ExistingCalendarRadioButton;
 
     private HashMap<String, ArrayList<LocalDate>> raBlackoutMap;
     private HashMap<LocalDate, Double> exceptionMap;
@@ -354,10 +356,28 @@ public class DutySchedulerGui {
             }
         });
 
+        NewCalendarRadioButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                CalendarNameLabel.setText("Calendar Name");
+            }
+        });
+
+        ExistingCalendarRadioButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                CalendarNameLabel.setText("Calendar ID");
+            }
+        });
+
         SubmitToGCalButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                GCalAccessForLocalApplication.createNewDutyCalendar(CalendarNameTextField.getText(), schedule);
+                if (NewCalendarRadioButton.isSelected()) {
+                    GCalAccessForLocalApplication.createNewDutyCalendar(CalendarNameTextField.getText(), schedule);
+                } else if (ExistingCalendarRadioButton.isSelected()) {
+                    GCalAccessForLocalApplication.populateExistingDutyCalendar(CalendarNameTextField.getText(), schedule);
+                }
             }
         });
     }
